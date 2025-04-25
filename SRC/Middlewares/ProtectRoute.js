@@ -1,28 +1,35 @@
 // middleware/authMiddleware.js
-
 import jwt from 'jsonwebtoken';
 import User from '../Models/UserModel.js';
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 
-export const protect = async (req, res, next) => {
-  let token;
+dotenv.config();
 
+
+export const protectRoute = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.headers.authorization?.split(" ")[1];
 
-    if (authHeader && authHeader.startsWith('Bearer')) {
-      token = authHeader.split(' ')[1];
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id).select('-password');
-
-      if (!user) return res.status(401).json({ message: 'User not found' });
-
-      req.user = user; // Attach user to request
-      next();
-    } else {
-      return res.status(401).json({ message: 'No token provided' });
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
     }
-  } catch (err) {
-    return res.status(401).json({ message: 'Token verification failed', error: err.message });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Decoded token:", decoded); // Debugging line
+
+    if (!decoded.userId || !mongoose.Types.ObjectId.isValid(decoded.userId)) {
+      return res.status(400).json({ message: "Invalid user ID format in token" });
+    }
+
+    // Fetch user from database to get the role
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    req.user = { userId: decoded.userId, role: user.role };
+    next();
+  } catch (error) {
+    console.error("Token verification failed:", error);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

@@ -1,24 +1,30 @@
-// utils/sendEmail.js
-
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
+dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "Gmail",
   auth: {
-    user: process.env.EMAIL_USERNAME, // your Gmail
-    pass: process.env.EMAIL_PASSWORD, // app password (not real password)
+    user: process.env.EMAIL_USERNAME, // e.g. yourname@gmail.com
+    pass: process.env.EMAIL_PASSWORD, // app password, not your Gmail password
   },
 });
 
-const sendEmail = async (to, subject, text) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    text,
-  };
+const sendMail = async (to, subject, html) => {
+  try {
+    const mailOptions = {
+      from: `"Safety App" <${process.env.EMAIL_USERNAME}>`,
+      to,
+      subject,
+      html,
+    };
 
-  await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent to:", to);
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
+  }
 };
 
-export default sendEmail;
+export default sendMail;

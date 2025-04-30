@@ -25,7 +25,7 @@ const userSchema = mongoose.Schema({
 
   role: { 
     type: String, 
-    enum: ["user", "admin"], 
+    enum: ["user", "admin", "security"], 
     default: "user" }, 
 
   isVerified: {
@@ -37,6 +37,19 @@ const userSchema = mongoose.Schema({
   profilePhoto: {
     type: [String],
   },
+  emergencyContacts: [
+    {
+      name: { 
+        type: String,
+         required: true },
+      email: {
+         type: String, 
+         required: true },
+      phone: { type: 
+        String }, // Optional, in case you later want to send SMS
+    }
+  ],
+  
   phoneNumber: {
     type: String,
   },
